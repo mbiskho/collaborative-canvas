@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canvas Sync Report</title>
+<style>
+  :root { --bg: #0d1520; --card: #131f2e; --line: #22324a; --ink: #e8eef6; --muted: #93a3b8; --grid: #1c2a3c;
+          --green: #4fd1a5; --orange: #f2914a; --blue: #6aa8ff; --violet: #a993ff; --yellow: #f5c76a; --red: #f06b6b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 48px 24px 56px; }
+  h1 { margin: 0 0 8px; font-size: 38px; letter-spacing: -0.02em; }
+  .lede { margin: 0 0 10px; color: var(--muted); font-size: 17px; max-width: 920px; }
+  code { font: 13px ui-monospace, SFMono-Regular, Menlo, monospace; background: #0a111a; padding: 2px 6px; border-radius: 5px; color: #cdd6e3; }
+  .sample { display: inline-block; margin: 6px 0 26px; padding: 4px 10px; border: 1px solid #5b4a2a; border-radius: 999px; color: var(--yellow); background: #2a2214; font-size: 12.5px; font-weight: 600; }
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 8px; }
+  .stat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .stat b { display: block; font-size: 28px; }
+  .stat span { color: var(--muted); font-size: 13.5px; }
+  .good { color: var(--green); }
+  h2 { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 30px 0 12px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .grid2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+  .cap { color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+  svg text { fill: #7d8da3; font: 11px Inter, -apple-system, sans-serif; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; padding: 0 8px 8px; border-bottom: 1px solid var(--line); }
+  td { padding: 8px; border-bottom: 1px solid #1a2839; }
+  tr:last-child td { border-bottom: 0; }
+  .mono { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; color: #c6d1df; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; background: #123528; color: var(--green); }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+  .split { display: flex; height: 26px; border-radius: 6px; overflow: hidden; margin: 10px 0 4px; }
+  .foot { margin-top: 28px; color: #5f7088; font-size: 12.5px; }
+  @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, 1fr); } .grid2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Distributed Real-Time Collaborative Canvas</h1>
+  <p class="lede">Yjs CRDTs in the browser, a Go relay that never decodes them, Redis Pub/Sub across instances and Postgres history. Produced by <code>make bench</code>, <code>make bench-cross</code> and <code>make chaos</code> against the two-instance compose stack.</p>
+  <span class="sample">Sample data: illustrative numbers, not from a recorded run</span>
+
+  <div class="stats">
+    <div class="stat"><b>38 ms</b><span>p95 peer-to-peer sync</span></div>
+    <div class="stat"><b>1,940</b><span>frames/s delivered (100 clients)</span></div>
+    <div class="stat"><b class="good">50 / 50</b><span>chaos runs fully converged</span></div>
+    <div class="stat"><b>&lt; 16 ms</b><span>local edit to paint</span></div>
+    <div class="stat"><b>8.4×</b><span>median compaction ratio</span></div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h2>Fan-out latency distribution</h2>
+      <div class="panel"><div id="hist"></div>
+        <div class="cap">Send → receive at a peer, 20 rooms × 5 clients × 20 msg/s, 60 s. Clients split across both relay instances, so most samples cross Redis.</div></div>
+    </div>
+    <div>
+      <h2>Throughput and p95 vs clients</h2>
+      <div class="panel"><div id="scale"></div>
+        <div class="legend"><span><i style="background:var(--blue)"></i>delivered frames/s</span><span><i style="background:var(--orange)"></i>p95 ms</span><span><i style="background:var(--red);height:2px;vertical-align:4px"></i>50 ms target</span></div></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <h2>Chaos runs: drops vs convergence</h2>
+      <div class="panel">
+        <table><thead><tr><th>Run</th><th>Clients</th><th>Ops</th><th>Drops</th><th>Settle</th><th>Result</th></tr></thead><tbody id="chaos"></tbody></table>
+        <div class="cap">8 replicas, random edits incl. offline, a socket killed every ~5 s per client. Pass = identical state vectors and identical document JSON on every replica.</div>
+      </div>
+    </div>
+    <div>
+      <h2>Redis traffic by channel</h2>
+      <div class="panel">
+        <div class="split"><div style="width:88%;background:var(--violet)"></div><div style="width:12%;background:var(--green)"></div></div>
+        <div class="legend"><span><i style="background:var(--violet)"></i><code>:aw</code> awareness 88% of messages</span><span><i style="background:var(--green)"></i><code>:doc</code> updates 12%</span></div>
+        <div class="split" style="margin-top:18px"><div style="width:41%;background:var(--violet)"></div><div style="width:59%;background:var(--green)"></div></div>
+        <div class="legend"><span><i style="background:var(--violet)"></i>awareness 41% of bytes</span><span><i style="background:var(--green)"></i>updates 59% of bytes</span></div>
+        <div class="cap">Cursor moves dominate the message count and none of the state, which is why they get their own channel and a 30/s server-side limit.</div>
+      </div>
+      <h2>Compaction</h2>
+      <div class="panel">
+        <table><thead><tr><th>Room</th><th>Updates folded</th><th>Before</th><th>After</th><th>Join time</th></tr></thead><tbody id="compact"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">Source: server/ (Go relay), web/ (React + Yjs), compactor/, tools/chaos.ts. The figures on this page are placeholders that show the report's shape. Replace them with real <code>reports/*.json</code> output.</p>
+</div>
+<script>
+const W = 560;
+function axes(h, xLabels, yMax, fmt, L = 44, B = 22) {
+  let s = "";
+  for (let k = 0; k <= 4; k++) { const y = 8 + (h - 8 - B) * (1 - k / 4); s += `<line x1="${L}" x2="${W}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end">${fmt(yMax * k / 4)}</text>`; }
+  return s;
+}
+// latency histogram (ms buckets)
+(() => {
+  const buckets = [[5,2],[10,9],[15,21],[20,30],[25,24],[30,16],[35,9],[40,5],[45,3],[50,1.5],[60,0.8],[80,0.3],[100,0.1]];
+  const h = 230, L = 44, B = 22, max = 32, bw = (W - L) / buckets.length;
+  let s = `<svg viewBox="0 0 ${W} ${h}" width="100%">` + axes(h, [], max, v => v.toFixed(0) + "%");
+  buckets.forEach(([ms, pct], i) => {
+    const bh = (h - 8 - B) * pct / max, x = L + i * bw + 3, y = h - B - bh;
+    s += `<rect x="${x}" y="${y}" width="${bw - 6}" height="${bh}" rx="3" fill="${ms <= 40 ? "var(--blue)" : "var(--orange)"}"/>`;
+    s += `<text x="${x + (bw - 6) / 2}" y="${h - 6}" text-anchor="middle">≤${ms}</text>`;
+  });
+  const px = L + 7.6 * bw; s += `<line x1="${px}" x2="${px}" y1="8" y2="${h - B}" stroke="var(--green)" stroke-dasharray="4 3"/><text x="${px + 6}" y="22" style="fill:var(--green)">p95 38 ms</text>`;
+  document.getElementById("hist").innerHTML = s + "</svg>";
+})();
+// scaling
+(() => {
+  const pts = [[10,196,14],[25,488,17],[50,975,22],[100,1940,31],[150,2890,42],[200,3810,58]];
+  const h = 230, L = 44, R = 40, B = 22, x = c => L + (c / 200) * (W - L - R), yT = v => 8 + (h - 8 - B) * (1 - v / 4000), yL = v => 8 + (h - 8 - B) * (1 - v / 80);
+  let s = `<svg viewBox="0 0 ${W} ${h}" width="100%">` + axes(h, [], 4000, v => (v / 1000).toFixed(0) + "k");
+  for (let k = 0; k <= 4; k++) s += `<text x="${W - R + 8}" y="${8 + (h - 8 - B) * (1 - k / 4) + 4}">${20 * k}</text>`;
+  s += `<line x1="${L}" x2="${W - R}" y1="${yL(50)}" y2="${yL(50)}" stroke="var(--red)" stroke-dasharray="6 4"/>`;
+  s += `<path d="${pts.map((p, i) => `${i ? "L" : "M"}${x(p[0])},${yT(p[1])}`).join("")}" fill="none" stroke="var(--blue)" stroke-width="2.5"/>`;
+  s += `<path d="${pts.map((p, i) => `${i ? "L" : "M"}${x(p[0])},${yL(p[2])}`).join("")}" fill="none" stroke="var(--orange)" stroke-width="2.5"/>`;
+  pts.forEach(p => { s += `<circle cx="${x(p[0])}" cy="${yT(p[1])}" r="3.5" fill="var(--blue)"/><circle cx="${x(p[0])}" cy="${yL(p[2])}" r="3.5" fill="var(--orange)"/><text x="${x(p[0])}" y="${h - 6}" text-anchor="middle">${p[0]}</text>`; });
+  document.getElementById("scale").innerHTML = s + "</svg>";
+})();
+const runs = [[1,8,4812,93,"1.2 s"],[2,8,4790,101,"0.9 s"],[3,8,4835,88,"1.4 s"],[4,12,7204,142,"1.8 s"],[5,12,7188,151,"2.1 s"],[6,16,9611,197,"2.6 s"]];
+document.getElementById("chaos").innerHTML = runs.map(r => `<tr><td class="mono">#${r[0]}</td><td class="mono">${r[1]}</td><td class="mono">${r[2].toLocaleString()}</td><td class="mono">${r[3]}</td><td class="mono">${r[4]}</td><td><span class="pill">converged</span></td></tr>`).join("")
+  + `<tr><td colspan="6" class="mono" style="color:var(--muted)">… 44 more runs, all converged</td></tr>`;
+const comp = [["workshop-q4", 18420, "4.1 MB", "412 KB", "1.9 s → 0.21 s"], ["retro-wk42", 6210, "1.3 MB", "188 KB", "0.6 s → 0.09 s"], ["bench-007", 2290, "620 KB", "71 KB", "0.3 s → 0.05 s"]];
+document.getElementById("compact").innerHTML = comp.map(r => `<tr><td class="mono">${r[0]}</td><td class="mono">${r[1].toLocaleString()}</td><td class="mono">${r[2]}</td><td class="mono">${r[3]}</td><td class="mono">${r[4]}</td></tr>`).join("");
+</script>
+</body>
+</html>
