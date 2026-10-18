@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Canvas App Preview</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f5f5f5; font: 14px/1.4 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #262626; }
+  .app { width: 1440px; height: 900px; display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background: #fff; border-bottom: 1px solid #e5e5e5; }
+  .brand { font-weight: 600; }
+  .bar { display: flex; align-items: center; gap: 4px; padding: 6px; background: #fff; border: 1px solid #e5e5e5; border-radius: 12px; box-shadow: 0 1px 2px #0000000d; }
+  .bar button { border: 0; background: none; padding: 6px 12px; border-radius: 8px; font: inherit; font-size: 13.5px; color: #404040; }
+  .bar button.on { background: #2563eb; color: #fff; }
+  .sep { width: 1px; height: 24px; background: #e5e5e5; margin: 0 4px; }
+  .sw { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #d4d4d4; }
+  .sw.on { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #2563eb; border-color: transparent; }
+  .pres { display: flex; align-items: center; gap: 12px; }
+  .av { width: 32px; height: 32px; border-radius: 50%; border: 2px solid #fff; color: #fff; font-size: 12px; font-weight: 600; display: grid; place-items: center; margin-left: -8px; }
+  .status { display: flex; align-items: center; gap: 8px; border: 1px solid #e5e5e5; background: #fff; border-radius: 999px; padding: 4px 12px; font-size: 12px; color: #525252; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; }
+  main { flex: 1; position: relative; }
+  .hud { position: absolute; right: 16px; bottom: 16px; background: #111827e6; color: #e5e7eb; border-radius: 10px; padding: 10px 14px; font: 12px ui-monospace, Menlo, monospace; line-height: 1.7; }
+  .hud b { color: #6ee7b7; font-weight: 600; }
+  .tag { position: absolute; left: 16px; bottom: 16px; font-size: 11.5px; color: #a3a3a3; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <span class="brand">Canvas</span>
+    <div class="bar">
+      <button class="on">Select</button><button>Rectangle</button><button>Ellipse</button><button>Text</button>
+      <div class="sep"></div>
+      <div class="sw" style="background:#fde68a"></div><div class="sw on" style="background:#bfdbfe"></div><div class="sw" style="background:#bbf7d0"></div>
+      <div class="sw" style="background:#fecaca"></div><div class="sw" style="background:#e9d5ff"></div><div class="sw" style="background:#f3f4f6"></div>
+      <div class="sep"></div>
+      <button>Undo</button><button style="opacity:.4">Redo</button><button style="color:#dc2626">Delete</button>
+    </div>
+    <div class="pres">
+      <div style="display:flex;padding-left:8px">
+        <div class="av" style="background:#e11d48">G</div><div class="av" style="background:#16a34a">L</div>
+        <div class="av" style="background:#d97706">B</div><div class="av" style="background:#7c3aed">K</div>
+      </div>
+      <div class="status"><span class="dot"></span>Live</div>
+      <span style="font-size:12px;color:#a3a3a3">room q7x2k9ma</span>
+    </div>
+  </header>
+  <main>
+    <svg width="1440" height="851" style="display:block;background:#fff">
+      <defs><pattern id="g" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#e5e7eb"/></pattern>
+        <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker></defs>
+      <rect width="100%" height="100%" fill="url(#g)"/>
+
+      <!-- a product-planning board people are building together -->
+      <text x="96" y="92" font-size="26" font-weight="700" fill="#111827">Q4 onboarding flow</text>
+      <text x="96" y="120" font-size="14" fill="#6b7280">workshop board · drag to rearrange</text>
+
+      <rect x="96" y="170" width="220" height="120" rx="6" fill="#bfdbfe" stroke="#1f2937" stroke-width="1.5"/>
+      <text x="116" y="204" font-size="16" font-weight="600" fill="#111827">Sign up</text>
+      <text x="116" y="230" font-size="13" fill="#374151">email or Google</text>
+      <text x="116" y="250" font-size="13" fill="#374151">→ verify within 24h</text>
+
+      <rect x="420" y="170" width="220" height="120" rx="6" fill="#bbf7d0" stroke="#1f2937" stroke-width="1.5"/>
+      <text x="440" y="204" font-size="16" font-weight="600" fill="#111827">Create workspace</text>
+      <text x="440" y="230" font-size="13" fill="#374151">name, invite 3 teammates</text>
+
+      <ellipse cx="855" cy="230" rx="115" ry="62" fill="#fde68a" stroke="#1f2937" stroke-width="1.5"/>
+      <text x="855" y="226" font-size="16" font-weight="600" fill="#111827" text-anchor="middle">First canvas</text>
+      <text x="855" y="248" font-size="13" fill="#374151" text-anchor="middle">template picker</text>
+
+      <rect x="420" y="380" width="220" height="120" rx="6" fill="#fecaca" stroke="#1f2937" stroke-width="1.5"/>
+      <text x="440" y="414" font-size="16" font-weight="600" fill="#111827">Drop-off: 38%</text>
+      <text x="440" y="440" font-size="13" fill="#374151">invite step too early?</text>
+
+      <rect x="1040" y="170" width="220" height="120" rx="6" fill="#e9d5ff" stroke="#1f2937" stroke-width="1.5"/>
+      <text x="1060" y="204" font-size="16" font-weight="600" fill="#111827">Aha moment</text>
+      <text x="1060" y="230" font-size="13" fill="#374151">2nd person joins</text>
+      <text x="1060" y="250" font-size="13" fill="#374151">the same canvas</text>
+
+      <line x1="316" y1="230" x2="414" y2="230" stroke="#64748b" stroke-width="2" marker-end="url(#ar)"/>
+      <line x1="640" y1="230" x2="734" y2="230" stroke="#64748b" stroke-width="2" marker-end="url(#ar)"/>
+      <line x1="970" y1="230" x2="1034" y2="230" stroke="#64748b" stroke-width="2" marker-end="url(#ar)"/>
+      <line x1="530" y1="290" x2="530" y2="374" stroke="#64748b" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#ar)"/>
+
+      <rect x="96" y="560" width="300" height="150" rx="6" fill="#f3f4f6" stroke="#1f2937" stroke-width="1.5"/>
+      <text x="116" y="594" font-size="16" font-weight="600" fill="#111827">Ideas</text>
+      <text x="116" y="622" font-size="13" fill="#374151">• move invites after first canvas</text>
+      <text x="116" y="644" font-size="13" fill="#374151">• show a live cursor demo</text>
+      <text x="116" y="666" font-size="13" fill="#374151">• template: retro board<tspan fill="#2563eb">|</tspan></text>
+
+      <!-- my selection (solid blue) -->
+      <rect x="1036" y="166" width="228" height="128" rx="8" fill="none" stroke="#2563eb" stroke-width="2"/>
+      <!-- Grace has "Drop-off" selected (dashed, her colour) -->
+      <rect x="416" y="376" width="228" height="128" rx="8" fill="none" stroke="#e11d48" stroke-width="2" stroke-dasharray="4 3"/>
+      <!-- Linus is typing in Ideas -->
+      <rect x="92" y="556" width="308" height="158" rx="8" fill="none" stroke="#16a34a" stroke-width="2" stroke-dasharray="4 3"/>
+
+      <!-- peer cursors -->
+      <g transform="translate(610 468)"><path d="M0 0 L0 16 L4.5 12 L8 19 L10.5 18 L7 11 L13 11 Z" fill="#e11d48" stroke="#fff"/><rect x="14" y="14" rx="4" width="56" height="20" fill="#e11d48"/><text x="20" y="28" font-size="12" fill="#fff">Grace</text></g>
+      <g transform="translate(330 664)"><path d="M0 0 L0 16 L4.5 12 L8 19 L10.5 18 L7 11 L13 11 Z" fill="#16a34a" stroke="#fff"/><rect x="14" y="14" rx="4" width="50" height="20" fill="#16a34a"/><text x="20" y="28" font-size="12" fill="#fff">Linus</text></g>
+      <g transform="translate(900 300)"><path d="M0 0 L0 16 L4.5 12 L8 19 L10.5 18 L7 11 L13 11 Z" fill="#d97706" stroke="#fff"/><rect x="14" y="14" rx="4" width="70" height="20" fill="#d97706"/><text x="20" y="28" font-size="12" fill="#fff">Barbara</text></g>
+      <g transform="translate(1180 420)"><path d="M0 0 L0 16 L4.5 12 L8 19 L10.5 18 L7 11 L13 11 Z" fill="#7c3aed" stroke="#fff"/><rect x="14" y="14" rx="4" width="40" height="20" fill="#7c3aed"/><text x="20" y="28" font-size="12" fill="#fff">Ken</text></g>
+    </svg>
+    <div class="hud">peers <b>4</b> · relay <b>server-2</b> via Redis<br>sync p95 <b>38 ms</b> · frames/s <b>212</b><br>offline queue <b>0</b> · reconnects <b>1</b></div>
+    <div class="tag">Mock-up rendered from static HTML. Sample data.</div>
+  </main>
+</div>
+</body>
+</html>
