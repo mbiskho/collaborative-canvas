@@ -1,0 +1,18 @@
+{
+  "name": "collaborative-canvas-tools",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "chaos": "tsx src/chaos.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "yjs": "13.6.20"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.1",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3"
+  }
+}
