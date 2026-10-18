@@ -1,0 +1,5 @@
+node_modules/
+dist/
+*.log
+reports/bench*.json
+reports/chaos.json
